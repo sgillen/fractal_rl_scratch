@@ -108,6 +108,7 @@ def do_long_rollout(env, policy, ep_length):
     act_list = []
     obs_list = []
     rew_list = []
+    uc_obs_list = []
 
     dtype = torch.float32
     obs = env.reset()
@@ -116,10 +117,14 @@ def do_long_rollout(env, policy, ep_length):
     while cur_step < ep_length:
         obs = torch.as_tensor(obs, dtype=dtype)
         obs_list.append(obs.clone())
+    
+        uc_obs_list.append(np.concatenate(
+            [env.sim.data.qpos.flat[1:],
+             env.sim.data.qvel.flat]))
 
         act = policy(obs)
         obs, rew, done, _ = env.step(act.numpy())
-
+        
         # if ep_length > 500 and rew < 0:
         #     env.render()
 
@@ -130,6 +135,7 @@ def do_long_rollout(env, policy, ep_length):
 
     ep_length = len(rew_list)
     ep_obs = torch.stack(obs_list)
+    uc_ep_obs = np.stack(uc_obs_list)
     ep_act = torch.stack(act_list)
     ep_rew = torch.tensor(rew_list, dtype=dtype)
     ep_rew = ep_rew.reshape(-1, 1)
@@ -148,7 +154,7 @@ def do_long_rollout(env, policy, ep_length):
                 
 
     torch.autograd.set_grad_enabled(True)
-    return ep_obs, ep_act, ep_rew, ep_length
+    return ep_obs, ep_act, ep_rew, uc_ep_obs
 
 
 # Policy =======================================================================

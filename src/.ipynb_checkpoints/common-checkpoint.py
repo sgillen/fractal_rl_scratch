@@ -4,6 +4,7 @@ import torch
 import time
 import torch.nn as nn
 from torch.nn.parameter import Parameter
+from collections.abc import MutableMapping
 
 
 # Post processors ==================================================
@@ -18,6 +19,27 @@ def variodiv(rews, obs, acts):
 
 def radodiv(rews, obs, acts):
     return rews/variation_dim(obs, order=.5)
+
+def mdim_div2(obs_list, act_list, rew_list):
+
+    combined_obs = torch.empty(0)
+    combined_rew = torch.empty(0)
+    m = None
+    
+    for obs,rew in  zip(obs_list, rew_list):
+        if obs.shape[0] == 1000:
+            gait_start = 200
+            combined_obs = torch.cat((combined_obs, obs[gait_start:]))
+            combined_rew = torch.cat((combined_rew, rew))
+        else:
+            m = obs.shape[1] / 2
+
+
+    if m is None:
+        m,_,_,_ = mesh_dim(combined_obs)
+        m = np.clip(m, 1, obs.shape[1] / 2)
+
+    return (combined_rew / m).sum()
 
 
 def mdim_div(rews, obs, acts):
@@ -86,17 +108,25 @@ def do_long_rollout(env, policy, ep_length):
     act_list = []
     obs_list = []
     rew_list = []
+    uc_obs_list = []
 
     dtype = torch.float32
     obs = env.reset()
     cur_step = 0
 
     while cur_step < ep_length:
-        obs = torch.as_tensor(obs, dtype=dtype).detach()
+        obs = torch.as_tensor(obs, dtype=dtype)
         obs_list.append(obs.clone())
+    
+        uc_obs_list.append(np.concatenate(
+            [env.sim.data.qpos.flat[1:],
+             env.sim.data.qvel.flat]))
 
         act = policy(obs)
         obs, rew, done, _ = env.step(act.numpy())
+        
+        # if ep_length > 500 and rew < 0:
+        #     env.render()
 
         act_list.append(torch.as_tensor(act.clone()))
         rew_list.append(rew)
@@ -105,12 +135,26 @@ def do_long_rollout(env, policy, ep_length):
 
     ep_length = len(rew_list)
     ep_obs = torch.stack(obs_list)
+    uc_ep_obs = np.stack(uc_obs_list)
     ep_act = torch.stack(act_list)
     ep_rew = torch.tensor(rew_list, dtype=dtype)
     ep_rew = ep_rew.reshape(-1, 1)
 
+    # if ep_rew.sum() < 0:
+    #     while True:
+    #         obs = torch.as_tensor(obs, dtype=dtype)
+    #         obs_list.append(obs.clone())
+            
+    #         act = policy(obs)
+    #         obs, rew, done, _ = env.step(act.numpy())
+
+    #         env.step(act)
+    #         env.render()
+    #         time.sleep(.01)
+                
+
     torch.autograd.set_grad_enabled(True)
-    return ep_obs, ep_act, ep_rew, ep_length
+    return ep_obs, ep_act, ep_rew, uc_ep_obs
 
 
 # Policy =======================================================================
@@ -171,6 +215,39 @@ class MLP(nn.Module):
         self.state_std = self.state_std.to(place)
         return self
 
+
+
+class BoxMesh(MutableMapping):
+    """A dictionary that applies an arbitrary key-altering
+       function before accessing the keys"""
+
+    def __init__(self, d):
+        self.d = d; self.scale = 1/d
+        self.mesh = dict()
+
+    def __getitem__(self, key):
+        return self.mesh[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        self.mesh[self.__keytransform__(key)] = value
+
+    def __delitem__(self, key):
+        del self.mesh[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self.mesh)
+
+    def __len__(self):
+        return len(self.mesh)
+
+    def __keytransform__(self, key):
+        round_key = np.asarray(key)
+        round_key = np.round(round_key * self.scale, decimals=0) * self.d
+        round_key[round_key == -0.0] = 0.0
+        round_key = tuple(round_key)
+        return round_key
+
+    
 
 # Dimensionality calculations ==================================================
 def create_box_mesh(data, d, initial_mesh=None):
