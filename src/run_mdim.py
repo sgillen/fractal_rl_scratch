@@ -5,8 +5,8 @@ import xarray as xr
 import numpy as np
 import os
 import time
-from common import *
-from seagul.mesh import target_d_div
+#from common import *
+from seagul.mesh import target_d_div, target_d_divn
 import pybullet_envs
 
 from gym.envs.registration import register
@@ -19,11 +19,18 @@ register(id='A1GymEnv-v1' , entry_point='motion_imitation.envs.gym_envs:A1GymEnv
 # post_fns = [identity, target_d_div, mdim_div]
 
 
-env_names = ["HalfCheetah-v2"]
-init_names = ["identity"]
+# env_names = ["HalfCheetah-v2"]
+# init_names = ["identity"]
+# init_dir = "./data17_repl2/"
+# save_dir = "./data17_repl4_mdim_td/"
+# post_fns = [identity, target_d_div, mdim_div, better_target_d_div]
+
+
+env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
+init_names = ["identity", "identity", "identity"]
 init_dir = "./data17_repl2/"
-save_dir = "./data17_repl3_mdim_td/"
-post_fns = [identity, target_d_div, mdim_div]
+save_dir = "./data17_repl4_mdim_td/"
+post_fns = [target_d_divn, identity, target_d_div, mdim_div ]
 
 
 
