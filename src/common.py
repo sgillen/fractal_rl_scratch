@@ -8,16 +8,16 @@ from collections.abc import MutableMapping
 
 
 # Post processors ==================================================
-def identity(rews, obs, acts):
+def identity(obs, acts, rews):
     return rews
 
-def madodiv(rews, obs, acts):
+def madodiv(obs, acts, rews):
     return rews/variation_dim(obs, order=1)
 
-def variodiv(rews, obs, acts):
+def variodiv(obs, acts, rews):
     return rews/variation_dim(obs, order=2)
 
-def radodiv(rews, obs, acts):
+def radodiv(obs, acts, rews):
     return rews/variation_dim(obs, order=.5)
 
 def mdim_div2(obs_list, act_list, rew_list):
@@ -42,7 +42,7 @@ def mdim_div2(obs_list, act_list, rew_list):
     return (combined_rew / m).sum()
 
 
-def mdim_div(rews, obs, acts):
+def mdim_div(obs, acts, rews):
     if obs.shape[0] == 1000:
         gait_start = 200
         m, _, _, _ = mesh_dim(obs[gait_start:])
@@ -53,7 +53,7 @@ def mdim_div(rews, obs, acts):
     return rews / m
 
 
-def cdim_div(rews, obs, acts):
+def cdim_div(obs, acts, rews):
     if obs.shape[0] == 1000:
         gait_start = 200
         _, c, _, _ = mesh_dim(obs[gait_start:])

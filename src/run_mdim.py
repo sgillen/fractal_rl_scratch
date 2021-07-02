@@ -6,28 +6,62 @@ import numpy as np
 import os
 import time
 from common import *
+from seagul.mesh import target_d_div
 import pybullet_envs
 
+from gym.envs.registration import register
+register(id='A1GymEnv-v1' , entry_point='motion_imitation.envs.gym_envs:A1GymEnv', max_episode_steps=1000)
 
 # env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
 # init_names = ["identity", "madodiv", "identity"]
+# init_dir = "./data17_repl/"
+# save_dir = "./data17_repl_mdim_td/"
+# post_fns = [identity, target_d_div, mdim_div]
 
-env_names = ["Humanoid-v2"]
+
+env_names = ["HalfCheetah-v2"]
 init_names = ["identity"]
-post_fns = [cdim_div]
+init_dir = "./data17_repl2/"
+save_dir = "./data17_repl3_mdim_td/"
+post_fns = [identity, target_d_div, mdim_div]
 
-init_dir = "./data_hm0/"
-save_dir = "./data_hm0_cdim/"
+
+
+#env_names = ["Humanoid-v2"]
+#init_names = ["identity"]
+#post_fns = [cdim_div]
+
+#init_dir = "./data_hm0/"
+#save_dir = "./data_hm0_cdim/"
+
+# num_experiments = len(post_fns)
+# num_seeds = 10
+# num_epochs = 750
+# n_workers = 12
+# n_delta = 240
+# n_top = 240
+# exp_noise = .0075
+
+
+#env_names = ['A1GymEnv-v1']
+#init_names = ["identity"]
+# post_fns = [target_d_div, mdim_div, cdim_div]
+# init_dir = "./data_a1f2/"
+# save_dir = "./data_a1f2_mdim_t_n/"
 
 assert not os.path.isdir(save_dir)
 
 num_experiments = len(post_fns)
 num_seeds = 10
-num_epochs = 750
+num_epochs = 250
 n_workers = 12
-n_delta = 240
-n_top = 240
-exp_noise = .0075
+n_delta = 60
+n_top = 20
+exp_noise =.02
+step_size = .025
+step_schedule=[.02, .02]
+exp_schedule=[.025, .025]
+
 
 start = time.time()
 env_config = {}
@@ -57,7 +91,8 @@ for env_name, init_name in zip(env_names, init_names):
         coords={"post": [fn.__name__ for fn in post_fns]},
         attrs={"model_dict": model_dict, "post_fns": post_fns, "env_name": env_name,
                "hyperparams": {"num_experiments": num_experiments, "num_seeds": num_seeds, "num_epochs": num_epochs,
-                               "n_workers": n_workers, "n_delta": n_delta, "n_top": n_top, "exp_noise": exp_noise},
+                               "n_workers": n_workers, "n_delta": n_delta, "n_top": n_top, "exp_noise": exp_noise,
+                               "step_schedule":step_schedule, "exp_schedule":exp_schedule},
                "env_config": env_config})
 
 
@@ -72,6 +107,9 @@ for env_name, init_name in zip(env_names, init_names):
                 agent = torch.load(f"{init_dir}/{env_name}/{save_file.name}")
                 seed = int(save_file.name.split(".")[-2].split("_")[-1])
                 init_epoch = len(agent.r_hist)
+
+                agent.postprocessor = post_fn
+                agent.seed = seed
                 
             print(f"starting env {env_name} with initial policy {init_name}")
             
