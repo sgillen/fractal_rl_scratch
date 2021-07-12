@@ -6,31 +6,31 @@ import numpy as np
 import os
 import time
 #from common import *
-from seagul.mesh import target_d_div, target_d_divn
+from seagul.mesh import target_d_div, target_d_divn, target_d_6, identity, mdim_div
 import pybullet_envs
 
 from gym.envs.registration import register
 register(id='A1GymEnv-v1' , entry_point='motion_imitation.envs.gym_envs:A1GymEnv', max_episode_steps=1000)
 
-# env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
-# init_names = ["identity", "madodiv", "identity"]
-# init_dir = "./data17_repl/"
-# save_dir = "./data17_repl_mdim_td/"
-# post_fns = [identity, target_d_div, mdim_div]
+env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
+init_names = ["identity", "madodiv", "identity"]
+init_dir = "./data_simple/"
+save_dir = "./data_simple_post/"
+post_fns = [identity, target_d_div, target_d_divn, mdim_div, target_d_6]
 
 
 # env_names = ["HalfCheetah-v2"]
 # init_names = ["identity"]
+# init_dir = "./data_simple/"
+# save_dir = "./data17_mdi/"
+# post_fns = [target_d_6]
+
+
+# env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
+# init_names = ["identity", "identity", "identity"]
 # init_dir = "./data17_repl2/"
 # save_dir = "./data17_repl4_mdim_td/"
-# post_fns = [identity, target_d_div, mdim_div, better_target_d_div]
-
-
-env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
-init_names = ["identity", "identity", "identity"]
-init_dir = "./data17_repl2/"
-save_dir = "./data17_repl4_mdim_td/"
-post_fns = [target_d_divn, identity, target_d_div, mdim_div ]
+# post_fns = [target_d_divn, identity, target_d_div, mdim_div ]
 
 
 
@@ -66,8 +66,8 @@ n_delta = 60
 n_top = 20
 exp_noise =.02
 step_size = .025
-step_schedule=[.02, .02]
-exp_schedule=[.025, .025]
+step_schedule=[.05, .005]
+exp_schedule=[.05, .005]
 
 
 start = time.time()
@@ -131,8 +131,12 @@ for env_name, init_name in zip(env_names, init_names):
             data.rews.loc[post_fn.__name__, i, :] = agent.lr_hist[init_epoch:]
             data.post_rews.loc[post_fn.__name__, i, :] = agent.r_hist[init_epoch:]
             os.makedirs(f"{save_dir}/{env_name}", exist_ok=True)
-            torch.save(agent, f"{save_dir}/{env_name}/agent_{seed}.pkl")
+            #torch.save(agent, f"{save_dir}/{env_name}/agent_{seed}.pkl")
             i+=1
             
 
         torch.save(data, f"{save_dir}/{env_name}/data.xr")
+
+
+print(f"save_dir = {save_dir}")
+

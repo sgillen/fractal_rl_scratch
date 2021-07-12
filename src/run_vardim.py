@@ -19,26 +19,26 @@ register(id='A1GymEnv-v1' , entry_point='motion_imitation.envs.gym_envs:A1GymEnv
 
 
 
-env_names = ["HalfCheetah-v2"]#, "Hopper-v2", "Walker2d-v2"]
-post_fns = [identity]
+#env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
+#post_fns = [identity]
 
-#env_names = ['A1GymEnv-v1']
-#post_fns = [identity]# variodiv, madodiv]
+env_names = ['A1GymEnv-v1']
+post_fns = [identity]# variodiv, madodiv]
 
 #torch.set_default_dtype(torch.float64)
 num_experiments = len(post_fns)
 num_seeds = 10
-num_epochs = 750
+num_epochs = 1250
 n_workers = 12
 n_delta = 60
 n_top = 20
 exp_noise =.02
 step_size = .025
-step_schedule=[.02, .02]
-exp_schedule=[.025, .025]
+step_schedule=[.05, .005]
+exp_schedule=[.05, .005]
 
 
-save_dir = "./data17_repl2/"
+save_dir = "./data_a1/0/"
 env_config = {}
 
 assert not os.path.isdir(save_dir)
