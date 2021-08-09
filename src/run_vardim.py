@@ -7,6 +7,8 @@ import xarray as xr
 import numpy as np
 import os
 import pybullet_envs
+import gym_cassie
+#import roboschool
 
 from gym.envs.registration import register
 
@@ -22,23 +24,30 @@ register(id='A1GymEnv-v1' , entry_point='motion_imitation.envs.gym_envs:A1GymEnv
 #env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
 #post_fns = [identity]
 
-env_names = ['A1GymEnv-v1']
-post_fns = [identity]# variodiv, madodiv]
+#env_names = ['A1GymEnv-v1']
+#post_fns = [identity]# variodiv, madodiv]
+
+#env_names = ["RoboschoolAtlasForwardWalk-v1"]
+#post_fns = [identity]
+
+env_names = ["Cassie-v0"]
+post_fns = [identity]
+
 
 #torch.set_default_dtype(torch.float64)
 num_experiments = len(post_fns)
-num_seeds = 10
-num_epochs = 1250
-n_workers = 12
-n_delta = 60
-n_top = 20
-exp_noise =.02
-step_size = .025
-step_schedule=[.05, .005]
-exp_schedule=[.05, .005]
+num_seeds = 5
+num_epochs = 3200
+n_workers = 16
+n_delta = 240
+n_top = 240
+exp_noise =.0075
+step_size = .02
+step_schedule=[.02, .02]
+exp_schedule=[.0075, .0075]
 
 
-save_dir = "./data_a1/0/"
+save_dir = "./data_cassie2/00/"
 env_config = {}
 
 assert not os.path.isdir(save_dir)

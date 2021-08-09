@@ -12,10 +12,13 @@ import pybullet_envs
 from gym.envs.registration import register
 register(id='A1GymEnv-v1' , entry_point='motion_imitation.envs.gym_envs:A1GymEnv', max_episode_steps=1000)
 
-env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
-init_names = ["identity", "madodiv", "identity"]
-init_dir = "./data_simple/"
-save_dir = "./data_simple_post/"
+#env_names = ["HalfCheetah-v2", "Hopper-v2", "Walker2d-v2"]
+#init_names = ["identity", "madodiv", "identity"]
+
+env_names = ['A1GymEnv-v1']
+init_names  = ['identity']
+init_dir = "./data_a1/0/"
+save_dir = "./data_a1/0_post"
 post_fns = [identity, target_d_div, target_d_divn, mdim_div, target_d_6]
 
 
